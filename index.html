@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+	    <meta charset="utf-8">
+		<title>LightningPlayer</title>
+    	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    	<meta property="og:image" content="thumbnail.gif">
+   		<style>
+			body {
+				background: black;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			* {
+				cursor: none;
+			}
+		</style>
+		<script src="./js/libraries/latk.min.js"></script>
+		<script src="./js/libraries/threejs/three.min.js"></script>
+		<script src="./js/general-util.js"></script>
+		<script src="./js/threejs-util.js"></script>
+		<script src="./js/threejs-wasd.js"></script>
+		<script src="./js/threejs-mouse.js"></script>
+	</head>
+
+	<body>
+		<script>
+			"use strict";
+
+			// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+			let latk;
+			let latkFps = 12;
+			let latkFpsInterval;
+			let latkFpsDelta = 0;
+			let counter = 0;
+			let bgLayerIndex = 1;
+			let longestLayer = 0;
+			// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
+			const renderer = new THREE.WebGLRenderer({ antialiasing: true, alpha: false });
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setClearColor(0x000000);
+
+			renderer.autoClear = false;
+			document.body.appendChild(renderer.domElement);
+
+			const cameraFov = 60;
+			const cameraAspect = window.innerWidth / window.innerHeight;
+			const cameraNear = 0.1;
+			const cameraFar = 100;
+
+			const camera = new THREE.PerspectiveCamera(cameraFov, cameraAspect, cameraNear, cameraFar);
+
+			const clock = new THREE.Clock();
+
+			const scene = new THREE.Scene();
+			const fogColor = 0x000000;
+			const fogDensity = 0.00375;
+			scene.fog = new THREE.FogExp2(fogColor, fogDensity);
+			scene.background = new THREE.Color("#000000");  
+
+			const mat1 = new THREE.LineBasicMaterial({ color: 0xeeff55 });
+			const mat2 = new THREE.LineBasicMaterial({ color: 0x33ff33 });
+			const mat3 = new THREE.LineBasicMaterial({ color: 0x00aaff });
+
+			const globalScale = new THREE.Vector3(16, 9, -50);
+			const globalOffset = new THREE.Vector3(-5, -6, -13); 
+
+			let bigPoints = [];
+			let bigGeoBuffer = new THREE.BufferGeometry();
+
+			let bigLine1 = new THREE.LineSegments(bigGeoBuffer, mat1);
+			bigLine1.frustumCulled = false;
+			bigLine1.position.set(-0.01,0,0);
+
+			let bigLine2 = new THREE.LineSegments(bigGeoBuffer, mat2);
+			bigLine2.frustumCulled = false;
+			bigLine2.position.set(0,0,-0.1);
+
+			let bigLine3 = new THREE.LineSegments(bigGeoBuffer, mat3);
+			bigLine3.frustumCulled = false;
+			bigLine3.position.set(0,0.05,0.1);
+
+			scene.add(bigLine1, bigLine2, bigLine3);	
+
+			function updateLatk() {  
+				if (latk.ready) {
+					if (bgLayerIndex >= 0) {
+						try {
+							for (let strokeObj of latk.layers[bgLayerIndex].frames[0].strokes) {
+								drawStroke(strokeObj);
+							}
+						} catch (e) { }
+					}
+
+					for (let i=0; i<latk.layers.length; i++) {
+						if (i !== bgLayerIndex) {
+							try {
+								for (let strokeObj of latk.layers[i].frames[counter].strokes) {
+									drawStroke(strokeObj);
+								}
+							} catch (e) { }
+						}
+					}
+
+					latkFpsDelta += clock.getDelta();
+					if (latkFpsDelta > latkFpsInterval) {
+						latkFpsDelta = 0;
+						counter++;
+						if (counter > latk.layers[longestLayer].frames.length-1) counter = 0;
+					}
+				}
+			}
+
+			function drawStroke(strokeObj) {
+				for (let i=0; i<strokeObj.points.length-1; i++) {
+					let point1 = strokeObj.points[i];
+					let newPoint1 = new THREE.Vector3(point1.co[0], point1.co[1], point1.co[2]);
+					newPoint1.multiply(globalScale).add(globalOffset);
+					bigPoints.push(newPoint1);
+
+					let point2 = strokeObj.points[i+1];
+					let newPoint2 = new THREE.Vector3(point2.co[0], point2.co[1], point2.co[2]);
+					newPoint2.multiply(globalScale).add(globalOffset);
+					bigPoints.push(newPoint2);
+				}
+			}
+
+			function init() {
+				latk = Latk.read("./files/untitled.latk");
+
+				latkFpsInterval = 1.0 / latkFps;
+				console.log(latkFpsInterval);
+
+		        for (let i=0; i<latk.layers.length; i++) {
+		            if (latk.layers[i].frames.length > longestLayer) longestLayer = i;
+		        }
+
+		        resetCameraPosition();
+				setupWasd();
+				setupMouse();
+				draw();
+			}
+
+
+			function draw() {
+				bigPoints = [];
+
+				updateLatk();
+
+				//console.log("Total points in frame: " + bigPoints.length);
+				bigGeoBuffer.setFromPoints(bigPoints);
+				
+				updateWasd();
+				
+				renderer.render(scene, camera);
+
+				requestAnimationFrame(draw);
+			}
+
+			init();					
+		</script>
+	</body>
+
+</html>
