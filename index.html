@@ -67,27 +67,51 @@
 			const mat3 = new THREE.LineBasicMaterial({ color: 0x00aaff });
 
 			const globalScale = new THREE.Vector3(16, 9, -50);
-			const globalOffset = new THREE.Vector3(-5, -6, -13); 
+			const globalOffset = new THREE.Vector3(-8, -5, -2); 
 
 			let bigPoints = [];
 			let bigGeoBuffer = new THREE.BufferGeometry();
 
 			let bigLine1 = new THREE.LineSegments(bigGeoBuffer, mat1);
 			bigLine1.frustumCulled = false;
-			bigLine1.position.set(-0.01,0,0);
+			bigLine1.position.add(new THREE.Vector3(-0.01,0,0));
 
 			let bigLine2 = new THREE.LineSegments(bigGeoBuffer, mat2);
 			bigLine2.frustumCulled = false;
-			bigLine2.position.set(0,0,-0.1);
+			bigLine2.position.add(new THREE.Vector3(0,0,-0.1));
 
 			let bigLine3 = new THREE.LineSegments(bigGeoBuffer, mat3);
 			bigLine3.frustumCulled = false;
-			bigLine3.position.set(0,0.05,0.1);
+			bigLine3.position.add(new THREE.Vector3(0,0.05,0.1));
 
 			scene.add(bigLine1, bigLine2, bigLine3);	
 
+			let firstRun = true;
+
 			function updateLatk() {  
 				if (latk.ready) {
+					if (firstRun) {
+				        for (let i=0; i<latk.layers.length; i++) {
+				            if (latk.layers[i].frames.length > longestLayer) longestLayer = i;
+				        }
+
+						for (let layer of latk.layers) {
+							for (let frame of layer.frames) {
+								for (let stroke of frame.strokes) {
+									let newPoints = [];
+									for (let point of stroke.points) {
+										let newPoint = new THREE.Vector3(point.co[0], point.co[1], point.co[2]);
+										newPoint.multiply(globalScale).add(globalOffset);
+										newPoints.push(newPoint);
+									}
+									stroke.points = newPoints;
+								}
+							}
+						}
+
+						firstRun = false;
+					}
+
 					if (bgLayerIndex >= 0) {
 						try {
 							for (let strokeObj of latk.layers[bgLayerIndex].frames[0].strokes) {
@@ -117,15 +141,8 @@
 
 			function drawStroke(strokeObj) {
 				for (let i=0; i<strokeObj.points.length-1; i++) {
-					let point1 = strokeObj.points[i];
-					let newPoint1 = new THREE.Vector3(point1.co[0], point1.co[1], point1.co[2]);
-					newPoint1.multiply(globalScale).add(globalOffset);
-					bigPoints.push(newPoint1);
-
-					let point2 = strokeObj.points[i+1];
-					let newPoint2 = new THREE.Vector3(point2.co[0], point2.co[1], point2.co[2]);
-					newPoint2.multiply(globalScale).add(globalOffset);
-					bigPoints.push(newPoint2);
+					bigPoints.push(strokeObj.points[i]);
+					bigPoints.push(strokeObj.points[i+1]);
 				}
 			}
 
@@ -135,14 +152,11 @@
 				latkFpsInterval = 1.0 / latkFps;
 				console.log(latkFpsInterval);
 
-		        for (let i=0; i<latk.layers.length; i++) {
-		            if (latk.layers[i].frames.length > longestLayer) longestLayer = i;
-		        }
-
 		        resetCameraPosition();
 				setupWasd();
 				setupMouse();
-				draw();
+
+			    renderer.setAnimationLoop(draw);
 			}
 
 
@@ -157,8 +171,6 @@
 				updateWasd();
 				
 				renderer.render(scene, camera);
-
-				requestAnimationFrame(draw);
 			}
 
 			init();					
