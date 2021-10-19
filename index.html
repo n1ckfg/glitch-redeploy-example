@@ -30,6 +30,17 @@
 			"use strict";
 
 			// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+			/*
+			const url = "./files/untitled.latk";
+			const globalScale = new THREE.Vector3(16, 9, -50);
+			const globalOffset = new THREE.Vector3(-8, -5, -2); 
+			*/
+
+			const url = "./files/output.latk";
+			const globalScale = new THREE.Vector3(10, 10, 10);
+			const globalOffset = new THREE.Vector3(-20, -22.75, -20); 
+			// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
+
 			let latk;
 			let latkFps = 12;
 			let latkFpsInterval;
@@ -37,7 +48,6 @@
 			let counter = 0;
 			let bgLayerIndex = 1;
 			let longestLayer = 0;
-			// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 
 			const renderer = new THREE.WebGLRenderer({ antialiasing: true, alpha: false });
 			renderer.setSize(window.innerWidth, window.innerHeight);
@@ -65,9 +75,6 @@
 			const mat1 = new THREE.LineBasicMaterial({ color: 0xeeff55 });
 			const mat2 = new THREE.LineBasicMaterial({ color: 0x33ff33 });
 			const mat3 = new THREE.LineBasicMaterial({ color: 0x00aaff });
-
-			const globalScale = new THREE.Vector3(16, 9, -50);
-			const globalOffset = new THREE.Vector3(-8, -5, -2); 
 
 			let bigPoints = [];
 			let bigGeoBuffer = new THREE.BufferGeometry();
@@ -147,7 +154,7 @@
 			}
 
 			function init() {
-				latk = Latk.read("./files/untitled.latk");
+				latk = Latk.read(url);
 
 				latkFpsInterval = 1.0 / latkFps;
 				console.log(latkFpsInterval);
