@@ -3,22 +3,19 @@
 
 	<head>
 	    <meta charset="utf-8">
-		<title>LightningPlayer</title>
+		<title>Nick Fox-Gieg - Orbital Line 1</title>
     	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    	<meta property="og:image" content="thumbnail.gif">
-   		<style>
-			body {
-				background: black;
-				margin: 0px;
-				overflow: hidden;
-			}
-
-			* {
-				cursor: none;
-			}
-		</style>
-		<script src="./js/libraries/latk.min.js"></script>
+   		<link rel="stylesheet" href="./css/main.css">
 		<script src="./js/libraries/threejs/three.min.js"></script>
+		<script src="./js/libraries/latk.min.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/loaders/GLTFLoader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/loaders/DRACOLoader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/shaders/CopyShader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/shaders/LuminosityHighPassShader.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/EffectComposer.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/ShaderPass.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/RenderPass.js"></script>
+		<script src="https://fox-gieg.com/js/libraries/threejs/133/postprocessing/UnrealBloomPass.js"></script>
 		<script src="./js/general-util.js"></script>
 		<script src="./js/threejs-util.js"></script>
 		<script src="./js/threejs-wasd.js"></script>
@@ -52,6 +49,10 @@
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setClearColor(0x000000);
 
+			const exposure = 1.2;
+			renderer.toneMapping = THREE.ReinhardToneMapping;
+			renderer.toneMappingExposure = Math.pow(exposure, 4.0);
+
 			renderer.autoClear = false;
 			document.body.appendChild(renderer.domElement);
 
@@ -69,6 +70,17 @@
 			const fogDensity = 0.00375;
 			scene.fog = new THREE.FogExp2(fogColor, fogDensity);
 			scene.background = new THREE.Color("#000000");  
+
+			const bloomPass = new THREE.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+			bloomPass.threshold = 0; //0;
+			bloomPass.strength = 6; //1.5;
+			bloomPass.radius = 0.8; //0.8
+			
+			const renderPass = new THREE.RenderPass(scene, camera);
+
+			const composer = new THREE.EffectComposer(renderer);
+			composer.addPass(renderPass);
+			composer.addPass(bloomPass);
 
 			const mat1 = new THREE.LineBasicMaterial({ color: 0xeeff55 });
 			const mat2 = new THREE.LineBasicMaterial({ color: 0x33ff33 });
@@ -175,7 +187,7 @@
 				
 				updateWasd();
 				
-				renderer.render(scene, camera);
+				composer.render(); //scene, camera);
 			}
 
 			init();					
