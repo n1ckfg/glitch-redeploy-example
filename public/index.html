@@ -82,6 +82,12 @@
 			composer.addPass(renderPass);
 			composer.addPass(bloomPass);
 
+			// Configure and create Draco decoder.
+			const loader = new THREE.GLTFLoader();
+			const dracoLoader = new THREE.DRACOLoader();
+			dracoLoader.setDecoderPath("./js/libraries/threejs/libs/draco/");
+			loader.setDRACOLoader(dracoLoader);
+
 			const mat1 = new THREE.LineBasicMaterial({ color: 0xeeff55 });
 			const mat2 = new THREE.LineBasicMaterial({ color: 0x33ff33 });
 			const mat3 = new THREE.LineBasicMaterial({ color: 0x00aaff });
@@ -105,6 +111,11 @@
 
 			let firstRun = true;
 
+			const root = new THREE.Object3D();
+
+			const light = new THREE.AmbientLight(0x404040); // soft white light
+			scene.add(light);
+			
 			function updateLatk() {  
 				if (latk.ready) {
 					if (firstRun) {
@@ -164,6 +175,23 @@
 			}
 
 			function init() {
+				loader.load("./files/bg.glb", function(gltf) {
+					// gltf.animations; // Array<THREE.AnimationClip>
+					// gltf.scene; // THREE.Group
+					// gltf.scenes; // Array<THREE.Group>
+					// gltf.cameras; // Array<THREE.Camera>
+					// gltf.asset; // Object
+			        
+			        scene.add(root);	
+					scene.add(gltf.scene);
+
+			        gltf.scene.parent = root;
+
+					const scaler = 10;
+					root.scale.set(scaler, scaler, scaler);
+					root.position.set(0, 2, -30);
+				});
+
 				latk = Latk.read(url);
 
 				latkFpsInterval = 1.0 / latkFps;
