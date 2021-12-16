@@ -20,11 +20,33 @@
 		<script src="./js/threejs-util.js"></script>
 		<script src="./js/threejs-wasd.js"></script>
 		<script src="./js/threejs-mouse.js"></script>
+		<script src="./js/libraries/tonejs/Tone.js"></script>
 	</head>
 
 	<body>
 		<script>
 			"use strict";
+
+		    const audioPlayer = new Tone.Player({
+		        url: "./files/audio.mp3",
+		        loop: true,
+		        loopStart: 0,
+		        loopEnd: 12.335
+		    }).toDestination();
+
+			const audioVolume = new Tone.Volume(1).toDestination();
+
+			let audioAuthorized = false;
+			document.addEventListener("click", function() {
+				if (!audioAuthorized) {
+					audioPlayer.connect(audioVolume).start();
+					Tone.start();
+					let newPosition = counter * latkFpsInterval;
+	        		Tone.Transport.seconds = newPosition;
+					console.log("Audio ready at position " + newPosition + ".");
+					audioAuthorized = true;
+				}
+			});
 
 			// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ 
 			//const url = "./files/untitled.latk";
@@ -113,12 +135,13 @@
 
 			const root = new THREE.Object3D();
 
-			const light = new THREE.AmbientLight(0x404040); // soft white light
+			const light = new THREE.AmbientLight(0x808080); 
 			scene.add(light);
-			
+
 			function updateLatk() {  
 				if (latk.ready) {
 					if (firstRun) {
+						light.color.setRGB(0.25, 1.0, 1.0);
 				        for (let i=0; i<latk.layers.length; i++) {
 				            if (latk.layers[i].frames.length > longestLayer) longestLayer = i;
 				        }
@@ -160,6 +183,7 @@
 
 					latkFpsDelta += clock.getDelta();
 					if (latkFpsDelta > latkFpsInterval) {
+						light.intensity = Math.random() + 1.0;
 						latkFpsDelta = 0;
 						counter++;
 						if (counter > latk.layers[longestLayer].frames.length-1) counter = 0;
@@ -214,7 +238,7 @@
 				bigGeoBuffer.setFromPoints(bigPoints);
 				
 				updateWasd();
-				
+
 				composer.render(); //scene, camera);
 			}
 
