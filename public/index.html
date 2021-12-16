@@ -88,6 +88,11 @@
 			const clock = new THREE.Clock();
 
 			const scene = new THREE.Scene();
+			const bgLoader = new THREE.TextureLoader();
+			bgLoader.load("./images/bg.jpg" , function(texture) {
+            	scene.background = texture;  
+            });
+
 			const fogColor = 0x000000;
 			const fogDensity = 0.00375;
 			scene.fog = new THREE.FogExp2(fogColor, fogDensity);
