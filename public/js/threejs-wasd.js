@@ -8,7 +8,7 @@ let isFlyingUp = false;
 let isFlyingDown = false;
 
 let movingSpeed = 0;
-let movingSpeedMax = 0.04;
+let movingSpeedMax = 0.08;
 let movingDelta = 0.002;
 
 let keyIsPressed = false;
